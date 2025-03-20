@@ -3,8 +3,8 @@ import numpy as np
 import scipy.stats as stats
 import sys
 
-A_RANGE = (0.5, 2)  α
-V_RANGE = (0.5, 2) ν
+A_RANGE = (0.5, 2)
+V_RANGE = (0.5, 2)
 T_RANGE = (0.1, 0.5)
 
 def forward_equations(a, v, t):
