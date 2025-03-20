@@ -1,2 +1,2 @@
 #!/bin/bash
-pytest test/test_simulate.py
+python3 test/test_simulate.py
