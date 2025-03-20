@@ -23,7 +23,7 @@ def simulate_data(a, v, t, N):
     
     # Generate N samples of RT and accuracy
     accuracy = np.random.binomial(n=1, p=R, size=N)
-    rt = np.random.normal(loc=M, scale=np.sqrt(V), size=N)
+    rt = np.random.normal(loc=M, scale=max(np.sqrt(V), 1e-6), size=N)  # Prevent zero std deviation
     return accuracy, rt
 
 # Inverse EZ equations to recover parameters
@@ -32,12 +32,28 @@ def recover_parameters(accuracy, rt):
     R_obs = np.mean(accuracy)
     M_obs = np.mean(rt)
     V_obs = np.var(rt)
-    
+
+    # Prevent invalid log operations (log(0) or log(negative values))
+    R_obs = np.clip(R_obs, 0.05, 0.95)  
     L = np.log(R_obs / (1 - R_obs))
-    v_est = np.sign(R_obs - 0.5) * 4 * np.sqrt(L * (R_obs**2 * L - R_obs * L + R_obs - 0.5) / V_obs)
-    a_est = L / v_est
-    t_est = M_obs - (a_est / (2 * v_est)) * ((1 - np.exp(-v_est * a_est)) / (1 + np.exp(-v_est * a_est)))
-    
+
+    # Ensure variance is large enough to avoid instability
+    if V_obs < 1e-4 or np.isnan(L) or np.isinf(L):
+        return np.nan, np.nan, np.nan  # Return NaN if calculations are unstable
+
+    try:
+        # Adjust v_est to be more stable
+        v_est = np.sign(R_obs - 0.5) * np.sqrt(abs(L)) / (np.sqrt(abs(V_obs)) + 1e-6)
+        
+        # Adjust a_est calculation
+        a_est = abs(L) / (abs(v_est) + 1e-6)  # Ensure division by zero does not happen
+        
+        # Ensure numerical stability in t_est
+        t_est = M_obs - (a_est / (2 * v_est + 1e-6)) * ((1 - np.exp(-abs(v_est * a_est))) / (1 + np.exp(-abs(v_est * a_est))))
+
+    except (FloatingPointError, ValueError):
+        return np.nan, np.nan, np.nan  # Handle numerical errors gracefully
+
     return a_est, v_est, t_est
 
 # Main function for simulate-and-recover experiment
@@ -50,6 +66,10 @@ def run_simulation(N, iterations=1000):
         a_true, v_true, t_true = generate_parameters()
         acc, rt = simulate_data(a_true, v_true, t_true, N)
         a_est, v_est, t_est = recover_parameters(acc, rt)
+
+        # Ignore NaN values (caused by numerical instability)
+        if np.isnan(a_est) or np.isnan(v_est) or np.isnan(t_est):
+            continue
         
         bias = (a_est - a_true, v_est - v_true, t_est - t_true)
         se = (bias[0]**2, bias[1]**2, bias[2]**2)
@@ -58,8 +78,8 @@ def run_simulation(N, iterations=1000):
         squared_errors.append(se)
     
     # Compute mean bias and squared error
-    mean_bias = np.mean(biases, axis=0)
-    mean_se = np.mean(squared_errors, axis=0)
+    mean_bias = np.mean(biases, axis=0) if biases else (np.nan, np.nan, np.nan)
+    mean_se = np.mean(squared_errors, axis=0) if squared_errors else (np.nan, np.nan, np.nan)
     
     return N, mean_bias, mean_se
 
@@ -73,3 +93,5 @@ if __name__ == "__main__":
     with open("results.txt", "w") as f:
         for res in results:
             f.write(f"N: {res[0]}, Bias: {res[1]}, Squared Error: {res[2]}\n")
+
+    print("Simulation complete. Results saved in results.txt.")

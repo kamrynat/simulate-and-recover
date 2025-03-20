@@ -1,0 +1,3 @@
+N: 10, Bias: [nan nan nan], Squared Error: [nan nan nan]
+N: 40, Bias: [nan nan nan], Squared Error: [nan nan nan]
+N: 4000, Bias: [-0.94705376  5.52018606  0.31462237], Squared Error: [ 1.01788801 45.88655596  0.12924326]
