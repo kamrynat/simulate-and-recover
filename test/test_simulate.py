@@ -1,3 +1,4 @@
+#Used ChatGPT throughout to debug/troubleshoot
 import unittest
 import numpy as np
 from src.simulate_and_recover import generate_parameters, simulate_data, recover_parameters
