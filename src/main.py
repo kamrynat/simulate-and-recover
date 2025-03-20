@@ -6,7 +6,7 @@ from src.recover import inverse_equations
 def simulate_and_recover(N, iterations=1000):
     biases = []
     squared_errors = []
- 
+    
     for _ in range(iterations):
         try:
             a_true, v_true, t_true, R_obs, M_obs, V_obs = simulate_data(N)
@@ -29,4 +29,3 @@ if __name__ == "__main__":
         print(f"\nResults for N={N}:")
         print("Average Bias:", bias)
         print("Average Squared Error:", squared_error)
-
