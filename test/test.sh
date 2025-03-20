@@ -1,2 +1,4 @@
 #!/bin/bash
-python3 test/test_simulate.py
+
+echo "Running tests..."
+python3 -m unittest discover test
