@@ -1,5 +1,11 @@
+#Used ChatGPT throughout to debug
 import unittest
 import sys
+import os
+
+# Ensure Python finds 'src/' module
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from src.simulate import simulate_data
 from src.recover import inverse_equations
 
